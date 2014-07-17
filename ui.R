@@ -1,30 +1,21 @@
-
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 
-shinyUI(fluidPage(
+reactiveSvg <- function (outputId) {
+  HTML(paste("<div id=\"", outputId, "\" class=\"shiny-network-output\"><svg /></div>", sep=""))
+}
 
-  # Application title
-  titlePanel("Old Faithful Geyser Data"),
+shinyUI(pageWithSidebar(
+  headerPanel(title=HTML("Shiny Biplots")),
 
-  # Sidebar with a slider input for number of bins
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("bins",
-                  "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
-    ),
+  sidebarPanel("Description text.",
+               helpText(HTML("<br>Help text</br>"))
+  ),
 
-    # Show a plot of the generated distribution
-    mainPanel(
-      plotOutput("distPlot")
-    )
+  mainPanel(
+    includeCSS("stylesheet.css"),
+    includeHTML("index.html"),
+    includeScript("plot.js"),
+    reactiveSvg(outputId = "scatterplot")
   )
 ))
+
