@@ -4,14 +4,17 @@ shinyServer(function(input, output) {
 
   datasetInput <- reactive({
     switch(input$dataset,
-           "Iris" = iris,
-           "Cars" = mtcars
-    )
-    #     read.csv(input$files$datapath, header=T, stringsAsFactors=T)
+           "Flowers" = iris,
+           "Cars" = mtcars)
   })
 
-  output$barplot <- reactive({
-    datasetInput()
+  output$datasetName <- renderText({
+    input$dataset
+  })
+
+  output$barplotVar <- renderUI({
+    dataset = datasetInput()
+    selectInput(inputId = "barplotVar", "Select a variable:", choices = names(dataset))
   })
 
   output$filetable <- renderTable({
@@ -19,16 +22,12 @@ shinyServer(function(input, output) {
     rbind(head(dataset,6), tail(dataset,6))
   })
 
-  output$datasetName <- renderText({
-    input$dataset
-  })
-
-  output$varChoices <- renderUI({
-    dataset <- datasetInput()
-    selectInput(
-      "var1", "Select a variable:",
-      choices = names(dataset)
-    )
+  output$barplot <- reactive({
+    d <- head(datasetInput())
+    var = input$barplotVar
+    d = d[,names(d) == var]
+    # pass variable values and name
+    list(values = as.array(as.numeric(d)), varname = var)
   })
 
 })
