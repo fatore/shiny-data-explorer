@@ -1,37 +1,33 @@
 library(shiny)
 
-shinyUI(
-  fluidPage(
-
-    titlePanel("Shiny Data Explorer"),
-
-    tabsetPanel(
-      id='mainTabSet', selected='Barplot', type="pill",
+shinyUI(navbarPage("Shiny Data Explorer", id='navPage',
 
       # Dataset panel
-      tabPanel(
-        "Dataset",
+      tabPanel("Dataset",
         sidebarLayout(
-          sidebarPanel(
-            width = 2,
-            selectInput(inputId = "dataset", "Select a dataset:",
-                        choices = c("Flowers", "Cars"))),
+          sidebarPanel(width = 3, selectInput(
+            inputId = "dataset", "Select a dataset:",  choices = c("Flowers", "Cars"))),
           mainPanel(h3(textOutput("datasetName")), tableOutput("filetable")))
       ),
 
       # Barplot panel
-      tabPanel(
-        "Barplot",
+      tabPanel("Barplot",
         sidebarLayout(
           sidebarPanel(width = 3, htmlOutput("barplotVar")),
-          d3PlotOutput("barplot"))
-      )
+          mainPanel(d3PlotOutput("barplot"))
+        )
+      ),
 
       # Scatterplot panel
-#       tabPanel("Scatterplot", d3PlotOutput("scatterplot")), # TODO
+      tabPanel("Scatterplot",
+        sidebarLayout(
+          sidebarPanel(width = 3, htmlOutput("spVars")),
+          mainPanel(d3PlotOutput("scatterplot"))
+        )
+      )
 
       # Biplot panel
 #       tabPanel("Biplot", mainPanel())
     )
-  )
+#   )
 )

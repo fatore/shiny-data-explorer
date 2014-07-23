@@ -1,7 +1,7 @@
 library(shiny)
 
 # To be called from ui.R
-d3PlotOutput <- function(inputId, src=inputId, width="100%", height="400px") {
+d3PlotOutput <- function(inputId, src=inputId, width="100%", height="600px") {
   style <- sprintf("width: %s; height: %s;",
                    validateCssUnit(width), validateCssUnit(height))
 

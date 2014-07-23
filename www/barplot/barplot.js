@@ -9,21 +9,13 @@ binding.find = function(scope) {
   return $(scope).find(".custom-d3-barplot");
 };
 
+counter = 0;
+
 binding.renderValue = function(el, data) {
   // This function will be called every time we receive new output from Shiny.
   // The "el" argument is the  div for this particular chart.
 
-  d3.select(el).select("svg").remove();
-  var svg = d3.select(el).append("svg")
-
-  var w = 500;
-  var h = 100;
-  var barPadding = 1;
-
-  svg.attr("width", w)
-    .attr("height", h);
-
-  console.log(data);
+  var $el = $(el);
 
   var dataset = data.values;
 
@@ -31,19 +23,76 @@ binding.renderValue = function(el, data) {
     return;
   }
 
-  var rects = svg.selectAll("rect")
+  var state = $el.data("state");
+
+  if (!state || state.numElems != dataset.length) {
+    // get the SVG element
+    d3.select(el).select("svg").remove();
+    var svg = d3.select(el).append("svg");
+
+    // get sizes from client
+    var w = h = Math.min(el.clientWidth, el.clientHeight) - 50;
+
+    // set SVG size
+    svg.attr("width", w).attr("height", h);
+
+    // set x scale based on dataset length
+    var xScale = d3.scale.ordinal()
+      .domain(d3.range(dataset.length))
+      .rangeRoundBands([0, w], 0.05);
+
+    var yScale = d3.scale.linear()
+      .range([20, h]);
+
+    var colorScale = d3.scale.linear()
+      .rangeRound([0, 255]);
+
+    // add the visual elements
+    var rects = svg.selectAll("rect")
+      .data(dataset)
+      .enter()
+      .append("rect")
+      .attr("x", function(d, i) {
+        return xScale(i);
+      })
+      .attr("width", xScale.rangeBand());
+
+    $el.data("state", {
+      selection: svg,
+      numElems: dataset.length,
+      yScale: yScale,
+      colorScale: colorScale,
+      rects: rects
+    });
+
+    state = $el.data("state")
+  }
+
+  // Now, the code that'll run every time a value is rendered...
+  var min = d3.min(dataset, function(d) { return d; });
+  var max = d3.max(dataset, function(d) { return d; });
+
+  var yScale = state.yScale
+    .domain([min + counter, max]);
+
+  var colorScale = state.colorScale
+    .domain([min + counter, max]);
+
+  state.rects
     .data(dataset)
-    .enter()
-    .append("rect");
-
-  rects.attr("x", function(d, i) {
-      return i * (w / dataset.length); //Bar width of 20 plus 1 for padding
+    .transition(1000)
+    .delay(function(d, i) {
+      return i / dataset.length * 500;
     })
-    .attr("y", function(d) {return h - d * 4;})
-    .attr("width", w / dataset.length - barPadding)
-    .attr("height", function(d) {return d * 4;})
-    .attr("fill", function(d) {return "rgb(0, 0, " + (d * 10) + ")"});
-
+    .attr("y", function(d) {
+      return h - yScale(d);
+    })
+    .attr("height", function(d) {
+      return yScale(d);
+    })
+    .attr("fill", function(d) {
+      return "rgb(0, 0, " + colorScale(d) + ")"
+    });
 };
 
 // Tell Shiny about our new output binding
