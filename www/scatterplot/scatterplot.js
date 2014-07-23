@@ -13,40 +13,93 @@ binding.find = function(scope) {
 // The "el" argument is the  div for this particular chart.
 binding.renderValue = function(el, data) {
 
-  // Check data
-  console.log(data);
-
   var dataset = data.values;
 
   if (dataset.length < 1) {
     return;
   }
 
-  // Get SVG reference
-  d3.select(el).select("svg").remove();
-  var svg = d3.select(el).append("svg");
+  var padding = 30;
 
-  // Set sizes
-  var w = h = Math.min(el.clientWidth, el.clientHeight) - 50;
-  svg.attr("width", w).attr("height", h);
+  var $el = $(el);
 
-  var padding = 50;
+  var state = $el.data("state");
 
-  // Scales
-  var xScale = d3.scale.linear()
-    .domain([d3.min(dataset, function(d) { return d[0]; }),
-      d3.max(dataset, function(d) { return d[0]; })])
-    .range([padding, w - padding]);
+  if (!state || state.numElems != dataset.length) {
+    // get sizes from client
+    var w = h = Math.min(el.clientWidth, el.clientHeight) - 50;
 
-  var yScale = d3.scale.linear()
-    .domain([d3.min(dataset, function(d) { return d[1]; }),
-      d3.max(dataset, function(d) { return d[1]; })])
-    .range([h - padding, padding]);
+    d3.select(el).select("svg").remove();
 
-  var rScale = d3.scale.linear()
-    .domain([100, 10000])
-    .range([5, 2])
-    .clamp(true);
+    var svg = d3.select(el)
+      .append("svg")
+      .attr("width", w)
+      .attr("height", h);
+
+    //Define clipping path
+    svg.append("clipPath") //Make a new clipPath
+      .attr("id", "chart-area") //Assign an ID
+      .append("rect") //Within the clipPath, create a new rect
+      .attr("x", padding) //Set rect's position and size…
+      .attr("y", padding)
+      .attr("width", w - padding * 2)
+      .attr("height", h - padding * 2);
+
+      // Scales
+    var xScale = d3.scale.linear()
+      .range([padding * 2, w - padding * 2]);
+
+    var yScale = d3.scale.linear()
+      .range([h - padding * 2, padding * 2]);
+
+    var rScale = d3.scale.linear()
+      .domain([100, 10000])
+      .range([5, 2])
+      .clamp(true);
+
+      // Elements
+    var circles = svg.append("g")
+		  .attr("id", "circles")
+		  .attr("clip-path", "url(#chart-area)")
+		  .selectAll("circle")
+      .data(dataset)
+      .enter()
+      .append("circle");
+
+    svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + (h - padding) + ")");
+
+    svg.append("g")
+      .attr("class", "y axis")
+      .attr("transform", "translate(" + padding + ", 0)");
+
+    $el.data("state", {
+      numElems: dataset.length,
+      circles: circles,
+      svg: svg,
+      xScale: xScale,
+      yScale: yScale,
+      rScale: rScale
+    });
+
+    state = $el.data("state")
+  }
+
+  // Now, the code that'll run every time a value is rendered...
+  var minX = d3.min(dataset, function(d) { return d[0]; });
+  var maxX = d3.max(dataset, function(d) { return d[0]; });
+
+  var minY = d3.min(dataset, function(d) { return d[1]; });
+  var maxY = d3.max(dataset, function(d) { return d[1]; });
+
+  var xScale = state.xScale
+    .domain([minX, maxX]);
+
+  var yScale = state.yScale
+    .domain([minY, maxY]);
+
+  var rScale = state.rScale;
 
   // Axis
   var xAxis = d3.svg.axis()
@@ -61,11 +114,9 @@ binding.renderValue = function(el, data) {
     .ticks(5)
     .tickFormat(d3.format(".2"));
 
-  // Elements
-  var circles = svg.selectAll("circle")
+  state.circles
     .data(dataset)
-    .enter()
-    .append("circle")
+    .transition(1000)
     .attr("cx", function(d) {
       return xScale(d[0]);
     })
@@ -76,15 +127,16 @@ binding.renderValue = function(el, data) {
       return rScale(d[1]);
     });
 
-  svg.append("g")
-    .attr("class", "axis")
-    .attr("transform", "translate(0," + (h - padding / 2) + ")")
-    .call(xAxis);
+    //Update X axis
+    state.svg.select(".x.axis")
+      .transition(1000)
+      .call(xAxis);
 
-  svg.append("g")
-    .attr("class", "axis")
-    .attr("transform", "translate(" + (padding / 2) + ", 0)")
-    .call(yAxis);
+    //Update Y axis
+    state.svg.select(".y.axis")
+      .transition(1000)
+      .call(yAxis);
+
 };
 
 // Tell Shiny about our new output binding

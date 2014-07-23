@@ -9,19 +9,17 @@ binding.find = function(scope) {
   return $(scope).find(".custom-d3-barplot");
 };
 
-counter = 0;
-
 binding.renderValue = function(el, data) {
   // This function will be called every time we receive new output from Shiny.
   // The "el" argument is the  div for this particular chart.
-
-  var $el = $(el);
 
   var dataset = data.values;
 
   if (dataset.length < 1) {
     return;
   }
+
+  var $el = $(el);
 
   var state = $el.data("state");
 
@@ -58,7 +56,6 @@ binding.renderValue = function(el, data) {
       .attr("width", xScale.rangeBand());
 
     $el.data("state", {
-      selection: svg,
       numElems: dataset.length,
       yScale: yScale,
       colorScale: colorScale,
@@ -73,10 +70,10 @@ binding.renderValue = function(el, data) {
   var max = d3.max(dataset, function(d) { return d; });
 
   var yScale = state.yScale
-    .domain([min + counter, max]);
+    .domain([min, max]);
 
   var colorScale = state.colorScale
-    .domain([min + counter, max]);
+    .domain([min, max]);
 
   state.rects
     .data(dataset)
