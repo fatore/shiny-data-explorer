@@ -13,19 +13,19 @@ binding.find = function(scope) {
 // The "el" argument is the  div for this particular chart.
 binding.renderValue = function(el, data) {
 
-  var dataset = data.values;
+  console.log(data)
 
-  if (dataset.length < 1) {
+  if (!data) {
     return;
   }
-
-  var padding = 30;
 
   var $el = $(el);
 
   var state = $el.data("state");
 
-  if (!state || state.numElems != dataset.length) {
+  var padding = 30;
+
+  if (!state) {
     // get sizes from client
     var w = h = Math.min(el.clientWidth, el.clientHeight) - 50;
 
@@ -62,7 +62,7 @@ binding.renderValue = function(el, data) {
 		  .attr("id", "circles")
 		  .attr("clip-path", "url(#chart-area)")
 		  .selectAll("circle")
-      .data(dataset)
+      .data(data.elems)
       .enter()
       .append("circle");
 
@@ -75,7 +75,6 @@ binding.renderValue = function(el, data) {
       .attr("transform", "translate(" + padding + ", 0)");
 
     $el.data("state", {
-      numElems: dataset.length,
       circles: circles,
       svg: svg,
       xScale: xScale,

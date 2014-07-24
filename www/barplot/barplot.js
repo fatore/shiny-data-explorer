@@ -13,17 +13,19 @@ binding.renderValue = function(el, data) {
   // This function will be called every time we receive new output from Shiny.
   // The "el" argument is the  div for this particular chart.
 
-  var dataset = data.values;
+  console.log(data);
 
-  if (dataset.length < 1) {
+  if (!data) {
     return;
   }
+
+  var elems = data.elems;
 
   var $el = $(el);
 
   var state = $el.data("state");
 
-  if (!state || state.numElems != dataset.length) {
+  if (!state) {
     // get the SVG element
     d3.select(el).select("svg").remove();
     var svg = d3.select(el).append("svg");
@@ -36,27 +38,22 @@ binding.renderValue = function(el, data) {
 
     // set x scale based on dataset length
     var xScale = d3.scale.ordinal()
-      .domain(d3.range(dataset.length))
       .rangeRoundBands([0, w], 0.05);
 
     var yScale = d3.scale.linear()
       .range([20, h]);
 
-    var colorScale = d3.scale.linear()
-      .rangeRound([0, 255]);
+    var colorScale = d3.scale.category10()
+      .domain(data.classDomain);
 
     // add the visual elements
     var rects = svg.selectAll("rect")
-      .data(dataset)
+      .data(elems)
       .enter()
-      .append("rect")
-      .attr("x", function(d, i) {
-        return xScale(i);
-      })
-      .attr("width", xScale.rangeBand());
+      .append("rect");
 
     $el.data("state", {
-      numElems: dataset.length,
+      xScale: xScale,
       yScale: yScale,
       colorScale: colorScale,
       rects: rects
@@ -65,34 +62,40 @@ binding.renderValue = function(el, data) {
     state = $el.data("state")
   }
 
+  var xScale = state.xScale
+    .domain(d3.range(elems.length));
+
   // Now, the code that'll run every time a value is rendered...
-  var min = d3.min(dataset, function(d) { return d; });
-  var max = d3.max(dataset, function(d) { return d; });
+  var min = d3.min(elems, function(d) { return d.value; });
+  var max = d3.max(elems, function(d) { return d.value; });
 
   var yScale = state.yScale
     .domain([min, max]);
 
-  var colorScale = state.colorScale
-    .domain([min, max]);
+  var colorScale = state.colorScale;
 
   state.rects
-    .data(dataset)
+    .data(elems)
     .transition(1000)
     .delay(function(d, i) {
-      return i / dataset.length * 500;
+      return i / elems.length * 500;
     })
     .attr("y", function(d) {
-      return h - yScale(d);
+      return h - yScale(d.value);
     })
     .attr("height", function(d) {
-      return yScale(d);
+      return yScale(d.value);
     })
     .attr("fill", function(d) {
-      return "rgb(0, 0, " + colorScale(d) + ")"
-    });
+      return colorScale(d.classValue);
+    })
+    .attr("x", function(d, i) {
+      return xScale(i);
+    })
+    .attr("width", xScale.rangeBand());
 };
 
 // Tell Shiny about our new output binding
-Shiny.outputBindings.register(binding, "fatore.d3-barplot");
+Shiny.outputBindings.register(binding);
 
 })();

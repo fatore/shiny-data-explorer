@@ -14,7 +14,12 @@ shinyServer(function(input, output) {
 
   output$barplotVar <- renderUI({
     dataset = datasetInput()
-    selectInput(inputId = "barplotVar", "Select a variable:", choices = names(dataset))
+    verticalLayout(
+      selectInput(inputId = "bpVar", "Select the variable of interest:",
+                  choices = names(dataset)[(lapply(dataset, class) == "numeric")]),
+      selectInput(inputId = "bpClass", "Select the class variable:",
+                  choices = names(dataset)[(lapply(dataset, class) == "factor")])
+    )
   })
 
   output$spVars <- renderUI({
@@ -33,9 +38,21 @@ shinyServer(function(input, output) {
   })
 
   output$barplot <- reactive({
-    dataset <- datasetInput()
-    dataset = dataset[, names(dataset) == input$barplotVar]
-    list(values = as.array(as.numeric(dataset)), varname = input$barplotVar)
+    if (is.null(input$bpVar) || is.null(input$bpClass)) {
+      return(NULL)
+    }
+
+    d <- datasetInput()
+
+    ids = 1:nrow(d)
+    values = as.numeric(d[, names(d) == input$bpVar])
+    classValues = d[, names(d) == input$bpClass]
+
+    elems = mapply(function(id, value, classValue) {
+      list(id = id, value = value, classValue = classValue)
+    }, ids, values, classValues, SIMPLIFY = F, USE.NAMES = F)
+
+    list(elems = elems, varname = input$bpVar, classDomain = levels(classValues))
   })
 
   output$scatterplot <- reactive({
