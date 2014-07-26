@@ -14,7 +14,7 @@ shinyUI(navbarPage("Shiny Data Explorer", id='navPage',
       tabPanel("Barplot",
         sidebarLayout(
           sidebarPanel(width = 3, htmlOutput("barplotVar")),
-          mainPanel(d3PlotOutput("barplot"))
+          mainPanel(barplotOutput("barplot"))
         )
       ),
 
@@ -22,7 +22,7 @@ shinyUI(navbarPage("Shiny Data Explorer", id='navPage',
       tabPanel("Scatterplot",
         sidebarLayout(
           sidebarPanel(width = 3, htmlOutput("spVars")),
-          mainPanel(d3PlotOutput("scatterplot"))
+          mainPanel()#d3PlotOutput("scatterplot"))
         )
       )
 

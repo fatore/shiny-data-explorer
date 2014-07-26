@@ -13,8 +13,6 @@ binding.find = function(scope) {
 // The "el" argument is the  div for this particular chart.
 binding.renderValue = function(el, data) {
 
-  console.log(data)
-
   if (!data) {
     return;
   }
@@ -22,6 +20,8 @@ binding.renderValue = function(el, data) {
   var $el = $(el);
 
   var state = $el.data("state");
+
+  var elems = data.elems;
 
   var padding = 30;
 
@@ -57,12 +57,15 @@ binding.renderValue = function(el, data) {
       .range([5, 2])
       .clamp(true);
 
-      // Elements
+    var colorScale = d3.scale.category10()
+      .domain(data.classDomain);
+
+    // Elements
     var circles = svg.append("g")
 		  .attr("id", "circles")
 		  .attr("clip-path", "url(#chart-area)")
 		  .selectAll("circle")
-      .data(data.elems)
+      .data(elems)
       .enter()
       .append("circle");
 
@@ -79,18 +82,19 @@ binding.renderValue = function(el, data) {
       svg: svg,
       xScale: xScale,
       yScale: yScale,
-      rScale: rScale
+      rScale: rScale,
+      colorScale: colorScale
     });
 
     state = $el.data("state")
   }
 
   // Now, the code that'll run every time a value is rendered...
-  var minX = d3.min(dataset, function(d) { return d[0]; });
-  var maxX = d3.max(dataset, function(d) { return d[0]; });
+  var minX = d3.min(elems, function(d) { return d.value[0]; });
+  var maxX = d3.max(elems, function(d) { return d.value[0]; });
 
-  var minY = d3.min(dataset, function(d) { return d[1]; });
-  var maxY = d3.max(dataset, function(d) { return d[1]; });
+  var minY = d3.min(elems, function(d) { return d.value[1]; });
+  var maxY = d3.max(elems, function(d) { return d.value[1]; });
 
   var xScale = state.xScale
     .domain([minX, maxX]);
@@ -99,6 +103,10 @@ binding.renderValue = function(el, data) {
     .domain([minY, maxY]);
 
   var rScale = state.rScale;
+
+  var r = rScale(elems.length);
+
+  var colorScale = state.colorScale;
 
   // Axis
   var xAxis = d3.svg.axis()
@@ -114,17 +122,18 @@ binding.renderValue = function(el, data) {
     .tickFormat(d3.format(".2"));
 
   state.circles
-    .data(dataset)
+    .data(elems)
     .transition(1000)
     .attr("cx", function(d) {
-      return xScale(d[0]);
+      return xScale(d.value[0]);
     })
     .attr("cy", function(d) {
-      return yScale(d[1]);
+      return yScale(d.value[1]);
     })
-    .attr("r", function(d) {
-      return rScale(d[1]);
-    });
+    .attr("fill", function(d) {
+      return colorScale(d.classValue);
+    })
+    .attr("r", r);
 
     //Update X axis
     state.svg.select(".x.axis")
