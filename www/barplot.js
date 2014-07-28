@@ -12,17 +12,40 @@ binding.renderValue = function(el, data) {
     return;
   }
 
-  var margin = {top: 40, right: 20, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
+  var margin = {top: 40, right: 20, bottom: 30, left: 40};
+  var width = el.clientWidth - margin.left - margin.right;
+  var height = el.clientHeight - 10 - margin.top - margin.bottom;
 
-  // get the SVG element
-  var svg = d3.select(el).select("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+  // Get element state
+  var $el = $(el);
+  var state = $el.data("state");
 
-  svg.select("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // Init element
+  if (!state) {
+    var svg = d3.select(el).select("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // y-axis
+    svg.append("g")
+        .attr("class", "y axis")
+      .append("text")
+        .attr("class", "label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end");
+
+    $el.data("state", {
+      svg: svg
+    });
+
+    state = $el.data("state")
+  }
+
+  var svg = state.svg;
 
   var elems = data.elems;
 
@@ -32,18 +55,23 @@ binding.renderValue = function(el, data) {
 
   // set the x scale
   var xScale = d3.scale.ordinal()
-    .rangeRoundBands([0, width], 0.05)
-    .domain(d3.range(elems.length));
+    .domain(d3.range(elems.length))
+    .rangeRoundBands([0, width], 0.1);
 
   // set the y scale
   var yScale = d3.scale.linear()
-    .range([20, height])
-    .domain([min, max]);
+    .domain([min*0.9, max*1.1])
+    .range([height, 0]);
+
+  var yAxis = d3.svg.axis()
+    .scale(yScale)
+    .orient("left")
+    .ticks(10);
 
   // Update the color scale
   var colorScale = d3.scale.ordinal()
-    .range(d3.scale.category10().range().slice(0, data.classDomain.length))
-    .domain(data.classDomain);
+    .domain(data.classDomain)
+    .range(d3.scale.category10().range().slice(0, data.classDomain.length));
 
   // Bind the  data
   var bars = svg.selectAll("rect")
@@ -51,10 +79,10 @@ binding.renderValue = function(el, data) {
       return data.dsName + "-" + d.label;
     });
 
-  // Remove elements
+  // Remove old elements
   bars.exit().remove();
 
-  // Add elements
+  // Add new elements
   bars.enter()
     .append("rect")
     .attr("x", 0)
@@ -63,10 +91,6 @@ binding.renderValue = function(el, data) {
     })
     .on("mouseover", hoverIn)
     .on("mouseout", hoverOut)
-    .append("title")
-    .text(function(d) {
-      return d.label;
-    })
 
   // Update elements
   bars
@@ -82,35 +106,41 @@ binding.renderValue = function(el, data) {
       return xScale(i);
     })
     .attr("y", function(d) {
-      return height - yScale(d.value);
+      return yScale(d.value);
     })
     .attr("height", function(d) {
-      return yScale(d.value)
+      return height - yScale(d.value)
     })
-    .attr("width", xScale.rangeBand())
+    .attr("width", xScale.rangeBand());
 
-    function hoverIn(d) {
-      d3.select(this).attr("fill", "orange");
+  svg.select(".y.axis")
+      .transition(1000)
+      .call(yAxis)
+    .select("text")
+      .text(data.varName);
 
-      //Update the tooltip position and value
-      d3.select("#tooltip")
-        .style("left", (event.pageX + 20) + "px")
-        .style("top", (event.pageY - 20) + "px")
-        .select("#value").text(d.label);
+  function hoverIn(d) {
+    d3.select(this).attr("fill", "orange");
 
-      //Show the tooltip
-      d3.select("#tooltip").classed("hidden", false);
-    }
+    //Update the tooltip position and value
+    d3.select("#tooltip")
+      .style("left", (event.pageX + 20) + "px")
+      .style("top", (event.pageY - 20) + "px")
+      .select("#value").text(d.label);
 
-    function hoverOut(d) {
-      d3.select(this)
-        .attr("fill", function(d) {
-          return colorScale(d.classValue);
-        })
+    //Show the tooltip
+    d3.select("#tooltip").classed("hidden", false);
+  }
 
-      //Hide the tooltip
-      d3.select("#tooltip").classed("hidden", true);
-    }
+  function hoverOut(d) {
+    d3.select(this)
+      .attr("fill", function(d) {
+        return colorScale(d.classValue);
+      })
+
+    //Hide the tooltip
+    d3.select("#tooltip").classed("hidden", true);
+  }
 };
 
 // Tell Shiny about our new output binding

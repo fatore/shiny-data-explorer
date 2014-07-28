@@ -6,9 +6,10 @@ shinyServer(function(input, output) {
     dataset = list()
     df = switch(input$dataset,
                 "Flowers" = iris,
-                "Cars" = mtcars)
+                "Cars" = mtcars,
+                "Movies" = {load("data/movies2010.Rda"); movies2010})
 
-    numericVars = names(df)[(lapply(df, class) == "numeric")]
+    numericVars = names(df)[(lapply(df, class) != "factor")]
     factorVars = c(names(df)[(lapply(df, class) == "factor")], "None")
 
     list(df = df, numericVars = numericVars, factorVars = factorVars)
@@ -51,34 +52,35 @@ shinyServer(function(input, output) {
     values = df[, names(df) == input$bpVar]
     classValues = df[, names(df) == input$bpClass]
     if (length(classValues) < 1) {
-      classValues = as.factor(rep("None", nrow(df)))
+      classValues = as.factor(rep("", nrow(df)))
     }
 
     tryCatch({
       elems = mapply(function(label, value, classValue) {
         list(label = label, value = value, classValue = classValue)
       }, labels, values, classValues, SIMPLIFY = F, USE.NAMES = F)
-      list(dsName = input$dataset, elems = elems, varname = input$bpVar, classDomain = levels(classValues))
+      list(dsName = input$dataset, elems = elems, varName = input$bpVar, classDomain = levels(classValues))
     }, error = function(e) {return(NULL)})
 
   })
 
   output$scatterplot <- reactive({
-    if (is.null(input$spVarX) || is.null(input$spVarY) || is.null(input$spClass)) {
-      return(NULL)
-    }
+    df <- datasetInput()$df
 
-    ds <- datasetInput()
-    df = ds$df
-
-    ids = rownames(df)
+    labels = rownames(df)
     values = cbind(df[, names(df) == input$spVarX], df[, names(df) == input$spVarY])
     classValues = df[, names(df) == input$spClass]
+    if (length(classValues) < 1) {
+      classValues = as.factor(rep("", nrow(df)))
+    }
 
-    elems = mapply(function(id, x, y, classValue) {
-      list(id = id, value = list(x, y), classValue = classValue)
-    }, ids, values[,1], values[,2], classValues, SIMPLIFY = F, USE.NAMES = F)
+    tryCatch({
+      elems = mapply(function(label, x, y, classValue) {
+        list(label = label, value = list(x, y), classValue = classValue)
+      }, labels, values[,1], values[,2], classValues, SIMPLIFY = F, USE.NAMES = F)
+      list(dsName = input$dataset, elems = elems, classDomain = levels(classValues),
+           xVar = input$spVarX, yVar = input$spVarY)
+    }, error = function(e) {return(NULL)})
 
-    list(elems = elems, classDomain = levels(classValues))
   })
 })
