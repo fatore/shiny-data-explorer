@@ -11,26 +11,35 @@ binding.renderValue = function(el, data) {
     return;
   }
 
+  // set svg internal margin
   var margin = {top: 40, right: 20, bottom: 30, left: 40};
+
+  // save space for the legend
+  var legendBoxWidth = 100;
+
+  // svg dimensions
   var width = el.clientWidth - margin.left - margin.right;
   var height = el.clientHeight - 10 - margin.top - margin.bottom;
 
+  // svg internal padding
+  var padding = 15;
+
   // setup x
   var xValue = function(d) { return d.value[0];}, // data -> value
-    xScale = d3.scale.linear().range([0, width]), // value -> display
+    xScale = d3.scale.linear().range([padding, width - padding - legendBoxWidth]), // value -> display
     xMap = function(d) { return xScale(xValue(d));}, // data -> display
     xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
   // setup y
   var yValue = function(d) { return d.value[1];}, // data -> value
-    yScale = d3.scale.linear().range([height, 0]), // value -> display
+    yScale = d3.scale.linear().range([height - padding, padding]), // value -> display
     yMap = function(d) { return yScale(yValue(d));}, // data -> display
     yAxis = d3.svg.axis().scale(yScale).orient("left");
 
   // setup radius scale
   var rScale = d3.scale.linear()
     .domain([100, 10000])
-    .range([5, 2])
+    .range([6, 2])
     .clamp(true);
 
   // setup fill color
@@ -62,10 +71,9 @@ binding.renderValue = function(el, data) {
         .attr("transform", "translate(0," + height + ")")
       .append("text")
         .attr("class", "label")
-        .attr("x", width)
+        .attr("x", width - legendBoxWidth)
         .attr("y", -6)
         .style("text-anchor", "end");
-
 
     // y-axis
     svg.append("g")
@@ -76,6 +84,10 @@ binding.renderValue = function(el, data) {
         .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end");
+
+
+    svg.append("g")
+      .attr("class", "legend-box")
 
     $el.data("state", {
       svg: svg
@@ -90,8 +102,8 @@ binding.renderValue = function(el, data) {
   var elems = data.elems;
 
   // don't want circles overlapping axis, so add in buffer to data domain
-  xScale.domain([d3.min(elems, xValue)*0.9, d3.max(elems, xValue)*1.1]);
-  yScale.domain([d3.min(elems, yValue)*0.9, d3.max(elems, yValue)*1.1]);
+  xScale.domain([d3.min(elems, xValue), d3.max(elems, xValue)]);
+  yScale.domain([d3.min(elems, yValue), d3.max(elems, yValue)]);
 
   var r = rScale(elems.length);
 
@@ -118,7 +130,8 @@ binding.renderValue = function(el, data) {
 
   circles
     .on("mouseover", mouseOver)
-    .transition(1000)
+    .transition()
+    .duration(1000)
     .attr("cx", xMap)
     .attr("cy", yMap)
     .attr("fill", function(d) {
@@ -127,45 +140,21 @@ binding.renderValue = function(el, data) {
     .attr("r", r);
 
   svg.select(".x.axis")
-      .transition(1000)
+      .transition()
+      .duration(1000)
       .call(xAxis)
     .select("text")
       .text(data.xVar);
 
   svg.select(".y.axis")
-      .transition(1000)
+      .transition()
+      .duration(1000)
       .call(yAxis)
     .select("text")
       .text(data.yVar);
 
-   // draw legend
-  var legendUpdate = svg.selectAll(".legend")
-      .data(data.classDomain);
-
-  legendUpdate.exit().remove();
-
-  var legends = legendUpdate.enter().append("g")
-      .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-  legends.append("rect")
-      .attr("width", 18)
-      .attr("height", 18);
-
-  legends.append("text")
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .style("text-anchor", "end")
-
-  // draw legend colored rectangles
-  legendUpdate.select("rect")
-      .attr("x", width - 18)
-      .style("fill", color);
-
-  // draw legend text
-  legendUpdate.select("text")
-      .attr("x", width - 24)
-      .text(function(d) { return d;})
+  // draw legend
+  drawLegend(data.classDomain);
 
   function mouseOver(d) {
     // change opacity
@@ -184,6 +173,37 @@ binding.renderValue = function(el, data) {
     tooltip.transition()
        .duration(200)
        .style("opacity", 0);
+  }
+
+  function drawLegend(legendDomain) {
+    var legendUpdate = svg.select(".legend-box")
+        .selectAll(".legend")
+        .data(legendDomain);
+
+    legendUpdate.exit().remove();
+
+    var legends = legendUpdate.enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legends.append("rect")
+        .attr("width", 18)
+        .attr("height", 18);
+
+    legends.append("text")
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+
+    // draw legend colored rectangles
+    legendUpdate.select("rect")
+        .attr("x", width - 18)
+        .style("fill", color);
+
+    // draw legend text
+    legendUpdate.select("text")
+        .attr("x", width - 24)
+        .text(function(d) { return d;})
   }
 
 };

@@ -1,0 +1,21 @@
+.grid .tick {
+    stroke: lightgrey;
+    opacity: 0.7;
+}
+.grid path {
+      stroke-width: 0;
+}
+
+line.arrow {
+    stroke: #666;
+    stroke-width: 2px;
+}
+
+marker#arrow {
+    fill: #666;
+}
+
+.link-label {
+    font-family: sans-serif;
+    font-size: 11px;
+}

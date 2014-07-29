@@ -24,7 +24,11 @@
 	line-height: 20px;
 }
 
-
 .label {
   font: 11px sans-serif;
+}
+
+.legend-box {
+  width: auto
+	height: auto;
 }
