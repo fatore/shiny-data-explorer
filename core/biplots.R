@@ -3,6 +3,8 @@ library(tsne)
 library(mp)
 
 regressionBiplot = function(df, method="PCA") {
+  print("called biplot")
+
   df = scale(df)
 
   points = switch(method,

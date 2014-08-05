@@ -60,7 +60,6 @@ shinyServer(function(input, output) {
     ds = datasetInput()
 
     verticalLayout(
-      selectInput(inputId = "biplotMethod", "Reduction method:", choices = c("PCA", "Force Scheme", "tSNE")),
       selectInput(inputId = "biplotClass", "Class variable:", choices = ds$factorVars),
       div(class="titled-box",
           div(id="title", "Used variables"),
@@ -68,11 +67,17 @@ shinyServer(function(input, output) {
               checkboxGroupInput("biplotVars", label = "", choices = ds$numericVars, selected = ds$usedVars)
           )
       ),
-      br(),
       div(class="titled-box",
           div(id="title", "Tools"),
           div(id="content",
               checkboxInput("hideArrows", "Hide arrows", value = FALSE)
+          )
+      ),
+      div(class="titled-box",
+          div(id="title", "Advanced"),
+          div(id="content",
+              selectInput(inputId = "biplotMethod", "Reduction method:",
+                          choices = c("PCA", "Force Scheme", "tSNE"))
           )
       )
     )

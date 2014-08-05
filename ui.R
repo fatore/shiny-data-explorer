@@ -10,6 +10,7 @@ shinyUI(
                           inputId = "dataset", "Dataset:",
                           choices = c("Flowers", "Cars", "Movies"))),
                         mainPanel(h3(textOutput("datasetName")), tableOutput("filetable")))
+
              ),
 
              # Scatterplot panel

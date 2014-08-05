@@ -53,7 +53,7 @@ binding.renderValue = function(el, data) {
         .attr("class", "y grid");
 
     svg.append("g")
-      .attr("class", "legend-box");
+        .attr("class", "legend-box");
 
     // define marker
     svg.append("svg:defs").selectAll("marker")
