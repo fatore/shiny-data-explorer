@@ -28,16 +28,13 @@ shinyServer(function(input, output) {
     list(df = df, numericVars = numericVars, factorVars = factorVars, usedVars = usedVars)
   })
 
-  output$datasetName <- renderText({
-    input$dataset
+  output$filetable <- renderTable({
+    df <- datasetInput()$df
+    rbind(head(df, 6), tail(df, 6))
   })
 
-  output$barplotVar <- renderUI({
-    ds = datasetInput()
-    verticalLayout(
-      selectInput(inputId = "bpVar", "Variable of interest:", choices = ds$numericVars),
-      selectInput(inputId = "bpClass", "Class variable:", choices = ds$factorVars)
-    )
+  output$datasetName <- renderText({
+    input$dataset
   })
 
   output$spVars <- renderUI({
@@ -81,33 +78,6 @@ shinyServer(function(input, output) {
           )
       )
     )
-  })
-
-  output$filetable <- renderTable({
-    df <- datasetInput()$df
-    rbind(head(df, 6), tail(df, 6))
-  })
-
-  output$barplot <- reactive({
-    if (is.null(input$bpVar) || is.null(input$bpClass)) {
-      return()
-    }
-
-    df = datasetInput()$df
-
-    labels = rownames(df)
-    values = df[, names(df) == input$bpVar]
-    classValues = df[, names(df) == input$bpClass]
-    if (length(classValues) < 1) {
-      classValues = as.factor(rep("", nrow(df)))
-    }
-
-    tryCatch({
-      elems = mapply(function(label, value, classValue) {
-        list(label = label, value = value, classValue = classValue)
-      }, labels, values, classValues, SIMPLIFY = F, USE.NAMES = F)
-      list(dsName = input$dataset, elems = elems, varName = input$bpVar, classDomain = levels(classValues))
-    }, error = function(e) {return()})
   })
 
   output$scatterplot <- reactive({
