@@ -11,6 +11,14 @@ line.arrow {
     stroke-width: 2px;
 }
 
+.hidden {
+  display: none;
+}
+
+line.arrow.selected {
+  stroke-width: 6px;
+}
+
 marker#arrow {
     fill: #666;
 }
@@ -18,4 +26,21 @@ marker#arrow {
 .link-label {
     font-family: sans-serif;
     font-size: 11px;
+}
+
+.titled-box {
+    border: 1px dotted black;
+    padding-left: 10px;
+}
+
+.titled-box #title {
+    padding-left: 3px;
+    padding-right: 3px;
+    position: relative;
+    top : -11px;
+    display: inline;
+    background: #F5F5F5;
+}
+
+.titled-box #content {
 }

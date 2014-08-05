@@ -16,15 +16,14 @@ shinyUI(
              tabPanel("Scatterplot",
                       sidebarLayout(
                         sidebarPanel(width = 2, htmlOutput("spVars")),
-                        mainPanel(scatterplotOutput("scatterplot",  750,  650))
+                        mainPanel(scatterplotOutput("scatterplot",  800,  650))
                       )
              ),
 
              # Biplot panel
              tabPanel("Biplot",
-                      sidebarLayout(
-                        sidebarPanel(width = 2, htmlOutput("biplotVars")),
-                        mainPanel(biplotOutput("biplot",  750,  650))
+                      sidebarLayout(sidebarPanel(width = 2, htmlOutput("biplotVars")),
+                                    mainPanel(biplotOutput("biplot",  800,  650))
                       )
              )
   )

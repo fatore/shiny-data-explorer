@@ -20,7 +20,7 @@ binding.renderValue = function(el, data) {
   var legendBoxWidth = 100;
 
   // svg dimensions
-  var width = el.clientWidth - margin.left - margin.right;
+  var width = el.clientWidth - margin.left - margin.right - legendBoxWidth;
   var height = el.clientHeight - 10 - margin.top - margin.bottom;
 
   // svg internal padding
@@ -33,7 +33,7 @@ binding.renderValue = function(el, data) {
   // Init element
   if (!state) {
     var svg = d3.select(el).append("svg")
-        .attr("width", width + margin.left + margin.right)
+        .attr("width", width + margin.left + margin.right + legendBoxWidth)
         .attr("height", height + margin.top + margin.bottom)
       .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -83,7 +83,7 @@ binding.renderValue = function(el, data) {
   var yValue = function(d) { return d.y;};
 
   var xPointsScale = d3.scale.linear()
-      .range([padding, width - padding - legendBoxWidth])
+      .range([padding, width - padding])
       .domain([d3.min(points, xValue), d3.max(points, xValue)]);
 
   var yPointsScale = d3.scale.linear()
@@ -91,25 +91,12 @@ binding.renderValue = function(el, data) {
       .domain([d3.min(points, yValue), d3.max(points, yValue)]);
 
   var xAxisScale = d3.scale.linear()
-      .range([padding, width - padding - legendBoxWidth])
+      .range([padding, width - padding])
       .domain([d3.min(axis, xValue), d3.max(axis, xValue)]);
 
   var yAxisScale = d3.scale.linear()
       .range([height - padding, padding])
       .domain([d3.min(axis, yValue), d3.max(axis, yValue)]);
-
-  var xGrid = d3.svg.axis()
-      .scale(xPointsScale)
-      .orient("bottom")
-      .tickFormat("")
-      .tickSize(-height, 0, 0);
-
-  // setup y
-  var yGrid = d3.svg.axis()
-      .scale(yPointsScale)
-      .orient("left")
-      .tickFormat("")
-      .tickSize(- width + legendBoxWidth, 0, 0);
 
   // setup radius scale
   var rScale = d3.scale.linear()
@@ -170,13 +157,14 @@ binding.renderValue = function(el, data) {
   // Remove old elements
   tipCircles.exit().remove();
 
-  // Add new elements
+  // Add newtip elements
   tipCircles.enter().append("circle")
     .attr("class", "tip")
     .style("opacity", 0)
     .attr("r", 7)
     .attr()
     .on("click", function(d) {
+      d.selected = true;
       console.log(d);
     })
     .on("mouseout", mouseOut);
@@ -184,7 +172,8 @@ binding.renderValue = function(el, data) {
   tipCircles
     .on("mouseover", mouseOver)
     .attr("cx", function(d) {return xAxisScale(xValue(d));})
-    .attr("cy", function(d) {return yAxisScale(yValue(d));});
+    .attr("cy", function(d) {return yAxisScale(yValue(d));})
+    .style("visibility", data.hideArrows ? "hidden" : "visible");
 
   // Bind the data
   var lines = svg.selectAll("line")
@@ -200,7 +189,7 @@ binding.renderValue = function(el, data) {
     .attr("y2", height / 2)
     .remove();
 
-  // Add new elements
+  // Add new line elements
   lines.enter().append("line")
     .attr("x1", width / 2)
     .attr("y1", height / 2)
@@ -209,30 +198,51 @@ binding.renderValue = function(el, data) {
     .attr("fill", "black")
     .on("click", function(d) {
       console.log(d);
+      d.selected = true;
     })
     .on("mouseout", mouseOut);
 
   lines
+    .classed("selected", function(d) {return d.selected;})
     .on("mouseover", mouseOver)
     .transition()
     .duration(2000)
     .attr("x2", function(d) {return xAxisScale(xValue(d));})
     .attr("y2", function(d) {return yAxisScale(yValue(d));})
     .attr("class", "link arrow")
-    .attr("marker-end", "url(#arrow)");
+    .attr("marker-end", "url(#arrow)")
+    .style("visibility", data.hideArrows ? "hidden" : "visible");
 
-  svg.select(".x.grid")
-      .transition()
-      .duration(1000)
-      .call(xGrid);
 
-  svg.select(".y.grid")
-      .transition()
-      .duration(1000)
-      .call(yGrid);
+  redraw();
+  drawLegend(data.pointsClassDomain);
 
-   // draw legend
-   drawLegend(data.pointsClassDomain)
+  function redraw() {
+    // Create grid
+    var xGrid = d3.svg.axis()
+        .scale(xPointsScale)
+        .orient("bottom")
+        .tickFormat("")
+        .tickSize(-height, 0, 0);
+
+    // setup y
+    var yGrid = d3.svg.axis()
+        .scale(yPointsScale)
+        .orient("left")
+        .tickFormat("")
+        .tickSize(- width, 0, 0);
+
+    // Draw grid
+    svg.select(".x.grid")
+        .transition()
+        .duration(1000)
+        .call(xGrid);
+
+    svg.select(".y.grid")
+        .transition()
+        .duration(1000)
+        .call(yGrid);
+  }
 
   function mouseOver(d) {
     // change opacity
@@ -274,12 +284,12 @@ binding.renderValue = function(el, data) {
 
     // draw legend colored rectangles
     legendUpdate.select("rect")
-        .attr("x", width - 18)
+        .attr("x", width + legendBoxWidth - 18)
         .style("fill", color);
 
     // draw legend text
     legendUpdate.select("text")
-        .attr("x", width - 24)
+        .attr("x", width + legendBoxWidth - 24)
         .text(function(d) { return d;})
   }
 

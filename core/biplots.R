@@ -1,11 +1,13 @@
 library(plotrix)
 library(tsne)
+library(mp)
 
 regressionBiplot = function(df, method="PCA") {
   df = scale(df)
 
   points = switch(method,
                   "PCA" = prcomp(df, retx=T)$x[,1:2],
+                  "Force Scheme" = forceScheme(dist(df)),
                   "tSNE" = tsne(df, whiten=F))
 
   rownames(points) = rownames(df)

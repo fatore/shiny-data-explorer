@@ -60,10 +60,21 @@ shinyServer(function(input, output) {
     ds = datasetInput()
 
     verticalLayout(
-      selectInput(inputId = "biplotMethod", "Reduction method:", choices = c("PCA", "tSNE")),
+      selectInput(inputId = "biplotMethod", "Reduction method:", choices = c("PCA", "Force Scheme", "tSNE")),
       selectInput(inputId = "biplotClass", "Class variable:", choices = ds$factorVars),
-      checkboxGroupInput("biplotVars", "Used variables:",
-                         choices = ds$numericVars, selected = ds$usedVars)
+      div(class="titled-box",
+          div(id="title", "Used variables"),
+          div(id="content",
+              checkboxGroupInput("biplotVars", label = "", choices = ds$numericVars, selected = ds$usedVars)
+          )
+      ),
+      br(),
+      div(class="titled-box",
+          div(id="title", "Tools"),
+          div(id="content",
+              checkboxInput("hideArrows", "Hide arrows", value = FALSE)
+          )
+      )
     )
   })
 
@@ -144,11 +155,12 @@ shinyServer(function(input, output) {
       }, rownames(df), bpPoints[,1], bpPoints[,2], pointsClasses, SIMPLIFY = F, USE.NAMES = F)
 
       axis = mapply(function(label, x, y, classValue) {
-        list(x = x, y = y, label = label, classValue = classValue)
+        list(x = x, y = y, label = label, classValue = classValue, selected = FALSE)
       }, names(df[, input$biplotVars]), bpAxis[,1], bpAxis[,2], axisClasses, SIMPLIFY = F, USE.NAMES = F)
 
       list(dsName = input$dataset, points = points, axis = axis,
-           pointsClassDomain = levels(pointsClasses))
+           pointsClassDomain = levels(pointsClasses), values = df[, input$biplotVars],
+           hideArrows = input$hideArrows)
     }, error = function(e) {return()})
   })
 })
