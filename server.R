@@ -49,37 +49,6 @@ shinyServer(function(input, output) {
     )
   })
 
-  output$biplotVars <- renderUI({
-    if (is.null(input$dataset)) {
-      return()
-    }
-
-    ds = datasetInput()
-
-    verticalLayout(
-      selectInput(inputId = "biplotClass", "Class variable:", choices = ds$factorVars),
-      div(class="titled-box",
-          div(id="title", "Used variables"),
-          div(id="content",
-              checkboxGroupInput("biplotVars", label = "", choices = ds$numericVars, selected = ds$usedVars)
-          )
-      ),
-      div(class="titled-box",
-          div(id="title", "Tools"),
-          div(id="content",
-              checkboxInput("hideArrows", "Hide arrows", value = FALSE)
-          )
-      ),
-      div(class="titled-box",
-          div(id="title", "Advanced"),
-          div(id="content",
-              selectInput(inputId = "biplotMethod", "Reduction method:",
-                          choices = c("PCA", "Force Scheme", "tSNE"))
-          )
-      )
-    )
-  })
-
   output$scatterplot <- reactive({
     if (is.null(input$spVarX) || is.null(input$spVarY) || is.null(input$spClass)) {
       return()
@@ -104,17 +73,36 @@ shinyServer(function(input, output) {
     }, error = function(e) {return()})
   })
 
-  output$biplot <- reactive({
+  output$biplotVars <- renderUI({
+    if (is.null(input$dataset)) return()
+    biplotVarsView(datasetInput())
+  })
+
+  output$biplotView <- renderUI({
+    if (is.null(input$dataset)) return()
+    biplotMainView(datasetInput())
+
+  })
+
+  updateBiplot <- reactive({
     if (is.null(input$biplotVars) || is.null(input$biplotMethod)) {
       return()
     }
+    df <- datasetInput()$df
+    regressionBiplot(df[, input$biplotVars], input$biplotMethod)
+  })
 
-    ds = datasetInput()
-    df <- ds$df
+  output$biplot <- reactive({
+
+    df <- datasetInput()$df
 
     tryCatch({
 
-      biplot = regressionBiplot(df[, input$biplotVars], input$biplotMethod)
+      biplot = updateBiplot()
+
+      if (is.null(biplot)) {
+        return()
+      }
 
       bpPoints = biplot$points
       bpAxis = biplot$axis

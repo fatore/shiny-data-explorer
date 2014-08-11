@@ -36,13 +36,16 @@ marker#arrow {
 }
 
 .titled-box #title {
-    padding-left: 3px;
-    padding-right: 3px;
+    padding-left: 2px;
+    padding-right: 2px;
     position: relative;
     top : -11px;
     display: inline;
     background: #F5F5F5;
 }
 
-.titled-box #content {
+.titled-box #two-col-content {
+    -webkit-column-count: 2; /* Chrome, Safari, Opera */
+    -moz-column-count: 2; /* Firefox */
+    column-count: 2;
 }
