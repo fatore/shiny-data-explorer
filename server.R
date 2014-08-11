@@ -28,10 +28,10 @@ shinyServer(function(input, output) {
     list(df = df, numericVars = numericVars, factorVars = factorVars, usedVars = usedVars)
   })
 
-  output$filetable <- renderTable({
-    df <- datasetInput()$df
-    rbind(head(df, 6), tail(df, 6))
-  })
+  output$filetable <- renderDataTable({
+    df = datasetInput()$df
+    cbind(Names = rownames(df), df)
+  }, options = list(iDisplayLength = 10))
 
   output$datasetName <- renderText({
     input$dataset

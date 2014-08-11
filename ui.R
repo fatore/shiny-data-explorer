@@ -12,7 +12,7 @@ shinyUI(
           width = 2,
           selectInput(inputId = "dataset", "Dataset:", choices = c("Flowers", "Cars", "Movies"))
         ),
-        mainPanel(h3(textOutput("datasetName")), tableOutput("filetable")))
+        mainPanel(h3(textOutput("datasetName")), dataTableOutput("filetable")))
 
     ),
 
@@ -24,7 +24,7 @@ shinyUI(
           width = 2,
           htmlOutput("spVars")
         ),
-        mainPanel(width = 5, scatterplotOutput("scatterplot",  600))
+        mainPanel(width = 5, scatterplotOutput("scatterplot",  h=600))
       )
     ),
 
